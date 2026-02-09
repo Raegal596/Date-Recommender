@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="app-header">
+    <div class="logo">✨📅✨</div>
+    <h1>Date Ideas in {{ city }}</h1>
+</header>
+
+<main>
+    <div class="recommendations-container">
+        {% if recommendations %}
+        {{ recommendations | safe }}
+        {% else %}
+        <div class="loading-state">
+            <p>Consulting the love hedgehogs... 🦔</p>
+            <div class="spinner"></div>
+        </div>
+        <!-- Client side or server side handling for loading? 
+                 For now, we render results directly. -->
+        {% endif %}
+    </div>
+
+    <a href="/" class="back-link">⬅ Back to Interests</a>
+</main>
+
+<nav class="bottom-nav">
+    <a href="/">🏠 Home</a>
+    <a href="#" class="active">❤️ Saved</a>
+    <a href="#">👤 Profile</a>
+</nav>
+{% endblock %}

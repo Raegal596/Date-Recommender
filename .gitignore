@@ -1,0 +1,6 @@
+chat_history/
+venv/
+.env
+__pycache__/
+*.pyc
+interests.md
