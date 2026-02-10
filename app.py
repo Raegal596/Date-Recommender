@@ -47,7 +47,10 @@ async def recommend(request: Request, lat: float = None, long: float = None, cit
     
     import markdown
     # If Gemini returns markdown formatted HTML (like wrapped in ```html), strip it.
-    cleaned_html = recommendations_html.replace("```html", "").replace("```", "")
+    if recommendations_html:
+        cleaned_html = recommendations_html.replace("```html", "").replace("```", "")
+    else:
+        cleaned_html = "<p>Error generating recommendations.</p>"
     
     location_label = city if city else f"{lat}, {long}"
     

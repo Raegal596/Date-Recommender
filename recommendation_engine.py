@@ -108,19 +108,40 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
 
             # Send results back to the model
             if function_responses:
+                print("DEBUG: Sending function responses back to model...")
                 response = chat.send_message(function_responses)
             else:
                 break
-        except Exception:
-             # print(f"DEBUG: Error in tool loop: {e}")
+        except Exception as e:
+             print(f"DEBUG: Error in tool loop: {e}")
+             import traceback
+             traceback.print_exc()
              break
     
     # If the model is still trying to call functions after the loop, force it to summarize
     if response.function_calls:
         try:
+            print("DEBUG: Forcing summary...")
             response = chat.send_message("You have performed enough searches. Please generate the final date itineraries now based on the information you have. Do not search anymore.")
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: Error forcing summary: {e}")
             pass
 
-    return response.text
+    text_response = response.text
+    if text_response is None:
+        print("DEBUG: response.text is None. Checking candidates...")
+        # Try to extract text manually if possible, or return a fallback
+        try:
+             if response.candidates and response.candidates[0].content.parts:
+                 for part in response.candidates[0].content.parts:
+                     if part.text:
+                         text_response = part.text
+                         break
+        except:
+            pass
+
+    if text_response is None:
+        return "<div class='error'>Sorry, I couldn't generate recommendations at this time. Please try again.</div>"
+    
+    return text_response
 
