@@ -12,10 +12,37 @@
         <h2>Hello! Ready for a date?</h2>
         <p>Let's find something magical to do today.</p>
 
-        <form action="/recommend" method="get" class="search-form">
-            <input type="text" name="city" placeholder="Enter your city/area..." required class="city-input">
-            <button type="submit" class="cta-button">Find Us a Date ✨</button>
-        </form>
+        <div class="search-container">
+            <button id="findDateBtn" class="cta-button">Find Us a Date ✨</button>
+            <p id="statusMessage" class="status-message"></p>
+        </div>
+
+        <script>
+            document.getElementById('findDateBtn').addEventListener('click', function () {
+                const statusMsg = document.getElementById('statusMessage');
+                statusMsg.textContent = "Locating you...";
+
+                if (!navigator.geolocation) {
+                    statusMsg.textContent = "Geolocation is not supported by your browser.";
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(success, error);
+
+                function success(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    statusMsg.textContent = "Location found! Consulting the love hedgehogs...";
+
+                    // Redirect to recommend endpoint with lat/long
+                    window.location.href = `/recommend?lat=${latitude}&long=${longitude}`;
+                }
+
+                function error() {
+                    statusMsg.textContent = "Unable to retrieve your location. Please allow location access.";
+                }
+            });
+        </script>
     </div>
 
     <div class="interests-section">

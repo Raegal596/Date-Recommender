@@ -27,16 +27,19 @@ async def read_root(request: Request):
 
 from recommendation_engine import generate_date_ideas
 
+from datetime import datetime
+ 
 @app.get("/recommend", response_class=HTMLResponse)
-async def recommend(request: Request, city: str):
-    # Load interest summary (raw text this time, or just pass the file content)
+async def recommend(request: Request, lat: float = None, long: float = None, city: str = None):
+    # If city is provided (fallback), use it. If lat/long provided, use them.
+    current_time = datetime.now()
     try:
         with open("interests.md", "r", encoding="utf-8") as f:
             interests_text = f.read()
     except:
         interests_text = "General cute things."
 
-    recommendations_html = generate_date_ideas(city, interests_text)
+    recommendations_html = generate_date_ideas(lat, long, city, interests_text, current_time)
     # Convert markdown to html if the engine returned markdown, 
     # but I asked for HTML in the prompt. Let's assume HTML.
     # Actually, it's safer to run it through markdown just in case Gemini ignored instructions,
@@ -46,4 +49,6 @@ async def recommend(request: Request, city: str):
     # If Gemini returns markdown formatted HTML (like wrapped in ```html), strip it.
     cleaned_html = recommendations_html.replace("```html", "").replace("```", "")
     
-    return templates.TemplateResponse("recommend.html", {"request": request, "city": city, "recommendations": cleaned_html})
+    location_label = city if city else f"{lat}, {long}"
+    
+    return templates.TemplateResponse("recommend.html", {"request": request, "city": location_label, "recommendations": cleaned_html})

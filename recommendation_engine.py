@@ -1,57 +1,126 @@
 
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
+from googlesearch import search
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client(api_key=api_key)
 
-def generate_date_ideas(city, interests_summary):
+def search_web(query: str) -> str:
     """
-    1. Uses Gemini to brainstorm 3 specific search queries based on interests + city.
-    2. (Simulator) In a real app we'd run these queries. Here we will ask Gemini to 
-       hallucinate plausible plans or we could try to use a search tool if available.
-       
-    Wait, I HAVE a search tool! I should use it.
-    But I can't call tools from this script running in the server.
-    
-    Alternative: The server will just use Gemini to generate *generic* ideas tailored to the city,
-    OR I can try to use a simple search library if I installed one (like duckduckgo-search).
-    
-    Let's stick to Gemini generation for now as per the "Simple Web App" scope, 
-    but if the user wants *actual* events, I really need real data.
-    
-    Since I cannot easily invoke the `search_web` tool from inside the user's running python process 
-    (unless I build a bridge), I will use `googlesearch-python` or similar if I can install it.
-    
-    Let's check if I can genericize it.
-    
-    Hypothesis: The user wants *specific* places. 
-    I will write a prompt that asks Gemini to recommend places in that city 
-    (it has training data up to a certain point).
+    Performs a web search for the given query and returns the top results.
     """
+    try:
+        results = []
+        # advanced=True yields objects with title, description, url
+        for result in search(query, num_results=5, advanced=True):
+            results.append(f"Title: {result.title}\nURL: {result.url}\nDescription: {result.description}\n")
+        return "\n---\n".join(results)
+    except Exception as e:
+        return f"Error performing search: {e}"
+
+def generate_date_ideas(lat, long, city, interests_summary, current_time):
+    """
+    Uses Gemini with a search tool to plan and generate date ideas.
+    """
+    
+    print("DEBUG: generate_date_ideas called")
+    location_str = f"Latitude: {lat}, Longitude: {long}" if lat and long else f"City: {city}"
     
     prompt = f"""
     Based on the following user interests:
     {interests_summary}
     
-    And the city: {city}
+    User Location: {location_str}
+    Current Time: {current_time}
     
-    Create 3 distinct, cute, and personalized date itineraries. 
-    For each itinerary:
-    1. Give it a cute title.
-    2. Suggest SPECIFIC real places in {city} if you know them (e.g., specific highly rated parks, restaurants).
-    3. Explain why it fits our interests.
+    GOAL: Create 3 distinct, cute, and personalized date itineraries.
     
-    Format the output as HTML cards. 
-    Use <div class="date-card">...</div> for each.
-    Inside, use <h3>Title</h3>, <p>Description...</p>.
+    PROCESS:
+    1.  **Analyze & Plan**: Analyze the interests, location, and time. Plan 3 potential date concepts.
+    2.  **Search**: YOU MUST USE the `search_web` tool to find SPECIFIC, REAL places/events.
+        -   Search for "events in {city} today" or "best [INTEREST] in {city}".
+        -   Verify they are open at {current_time}.
+    3.  **Synthesize**: Generate the final HTML output.
+    
+    CONSTRAINTS:
+    -   Do NOT make up places.
+    -   If you don't use the search tool, your answer will be rejected.
+    
+    OUTPUT FORMAT:
+    Return ONLY the HTML string starting with <div class="date-card">...
     """
+
+    # Create a chat session with the tool
+    # We configure the chat with the tool, but we will override the config for the first message
+    chat = client.chats.create(
+        model='gemini-2.0-flash',
+        config=types.GenerateContentConfig(
+            tools=[search_web],
+            temperature=0.7,
+            system_instruction="You are a helpful date planning assistant. You have access to a Google Search tool. You MUST use it to verify information and find real places. Do not guess.",
+            tool_config=types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode='ANY'
+                )
+            )
+        )
+    )
+
+    # Initial request - FORCE the model to use the search tool
+    print("DEBUG: Sending initial message to model...")
+    response = chat.send_message(prompt)
     
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+             print(f"DEBUG: Initial response parts: {response.candidates[0].content.parts}")
     except Exception as e:
-        return f"<p>Error generating dates: {e}</p>"
+        print(f"DEBUG: Could not print parts: {e}")
+
+    # Simple tool execution loop
+
+    # Simple tool execution loop (up to 5 turns)
+    for _ in range(5):
+        try:
+            if not response.function_calls:
+                break
+                
+            # Execute all function calls
+            function_responses = []
+            for call in response.function_calls:
+                if call.name == "search_web":
+                    args = call.args
+                    query = args.get("query")
+                    # print(f"DEBUG: Performing search for: {query}") 
+                    
+                    result = search_web(query)
+                    function_responses.append(
+                        types.Part(
+                            function_response=types.FunctionResponse(
+                                name="search_web",
+                                response={"result": result}
+                            )
+                        )
+                    )
+
+            # Send results back to the model
+            if function_responses:
+                response = chat.send_message(function_responses)
+            else:
+                break
+        except Exception:
+             # print(f"DEBUG: Error in tool loop: {e}")
+             break
+    
+    # If the model is still trying to call functions after the loop, force it to summarize
+    if response.function_calls:
+        try:
+            response = chat.send_message("You have performed enough searches. Please generate the final date itineraries now based on the information you have. Do not search anymore.")
+        except Exception:
+            pass
+
+    return response.text
+
