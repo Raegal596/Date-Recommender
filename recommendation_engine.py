@@ -4,6 +4,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 from googlesearch import search
+from googleapiclient.discovery import build
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -34,6 +35,40 @@ def search_web(query: str) -> str:
         print(f"Error executing search: {e}")
         return f"Error performing search: {e}"
 
+def search_web_official(query: str) -> str:
+    """
+    Performs a web search using the official Google Custom Search JSON API.
+    """
+    try:
+        api_key = os.getenv("GOOGLE_API_KEY")
+        cse_id = os.getenv("GOOGLE_CSE_ID")
+        
+        if not api_key or not cse_id:
+            # Fallback to the old search if keys are missing, or return error?
+            # User specifically asked for official API, so let's error or warn.
+            return "Error: GOOGLE_API_KEY or GOOGLE_CSE_ID not found in environment variables. Please add them to .env."
+
+        service = build("customsearch", "v1", developerKey=api_key)
+        # cse() returns a Resource, list() executes the search
+        res = service.cse().list(q=query, cx=cse_id, num=5).execute()
+        
+        search_items = res.get("items", [])
+        if not search_items:
+            return "No results found for this query."
+            
+        formatted_results = []
+        for item in search_items:
+            title = item.get("title")
+            link = item.get("link")
+            snippet = item.get("snippet")
+            formatted_results.append(f"Title: {title}\nURL: {link}\nDescription: {snippet}\n")
+            
+        return "\n---\n".join(formatted_results)
+
+    except Exception as e:
+        print(f"Error executing official search: {e}")
+        return f"Error performing search: {e}"
+
 def generate_date_ideas(lat, long, city, interests_summary, current_time):
     """
     Uses Gemini with a search tool to plan and generate date ideas.
@@ -53,7 +88,7 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
     
     PROCESS:
     1.  **Analyze & Plan**: Analyze the interests, location, and time. Plan 3 potential date concepts.
-    2.  **Search**: YOU MUST USE the `search_web` tool to find SPECIFIC, REAL places/events.
+    2.  **Search**: YOU MUST USE the `search_web_official` tool to find SPECIFIC, REAL places/events.
         -   Search for "events in {city} today" or "best [INTEREST] in {city}".
         -   Verify they are open at {current_time}.
     3.  **Synthesize**: Generate the final HTML output.
@@ -71,7 +106,7 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
     chat = client.chats.create(
         model='gemini-2.0-flash',
         config=types.GenerateContentConfig(
-            tools=[search_web],
+            tools=[search_web_official],
             temperature=0.7,
             system_instruction="You are a helpful date planning assistant. You have access to a Google Search tool. You MUST use it to verify information and find real places. Do not guess.",
             tool_config=types.ToolConfig(
@@ -103,15 +138,15 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
             # Execute all function calls
             function_responses = []
             for call in response.function_calls:
-                if call.name == "search_web":
+                if call.name == "search_web_official":
                     args = call.args
                     query = args.get("query") 
                     
-                    result = search_web(query)
+                    result = search_web_official(query)
                     function_responses.append(
                         types.Part(
                             function_response=types.FunctionResponse(
-                                name="search_web",
+                                name="search_web_official",
                                 response={"result": result}
                             )
                         )
