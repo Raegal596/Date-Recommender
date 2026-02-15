@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+jinja2
+python-dotenv
+google-generativeai
+google-genai
+markdown
+googlesearch-python
+google-api-python-client
+langchain
+langgraph
+langchain-google-genai
+tavily-python
+langchain-community

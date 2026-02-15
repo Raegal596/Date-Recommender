@@ -25,7 +25,7 @@ async def read_root(request: Request):
     interests_html = load_interests()
     return templates.TemplateResponse("index.html", {"request": request, "interests": interests_html})
 
-from recommendation_engine import generate_date_ideas
+from recommendation_engine import generate_date_ideas_agentic
 
 from datetime import datetime
  
@@ -33,17 +33,14 @@ from datetime import datetime
 async def recommend(request: Request, lat: float = None, long: float = None, city: str = None):
     # If city is provided (fallback), use it. If lat/long provided, use them.
     current_time = datetime.now()
-    try:
-        with open("interests.md", "r", encoding="utf-8") as f:
-            interests_text = f.read()
-    except:
-        interests_text = "General cute things."
-
-    recommendations_html = generate_date_ideas(lat, long, city, interests_text, current_time)
-    # Convert markdown to html if the engine returned markdown, 
-    # but I asked for HTML in the prompt. Let's assume HTML.
-    # Actually, it's safer to run it through markdown just in case Gemini ignored instructions,
-    # but the prompt asked for specific DIVs.
+    # Agentic pipeline handles interests internally
+    recommendations_html = generate_date_ideas_agentic(lat, long, city, str(current_time))
+    
+    # Clean up markdown if present (double check)
+    if recommendations_html:
+        cleaned_html = recommendations_html.replace("```html", "").replace("```", "")
+    else:
+        cleaned_html = "<p>Error generating recommendations.</p>"
     
     import markdown
     # If Gemini returns markdown formatted HTML (like wrapped in ```html), strip it.

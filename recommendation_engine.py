@@ -6,6 +6,16 @@ from dotenv import load_dotenv
 from googlesearch import search
 from googleapiclient.discovery import build
 
+# LangChain / LangGraph imports
+from typing import TypedDict, List, Dict, Any, Optional
+import json
+import datetime
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.tools import tool
+from langgraph.graph import StateGraph, END
+from tavily import TavilyClient
+
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
@@ -186,4 +196,269 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
         return "<div class='error'>Sorry, I couldn't generate recommendations at this time. Please try again.</div>"
     
     return text_response
+
+# -------------------------------------------------------------------------
+# Agentic Pipeline Implementation
+# -------------------------------------------------------------------------
+
+# Load Tavily API Key
+tavily_api_key = os.getenv("TAVILY_API_KEY")
+tavily_client = TavilyClient(api_key=tavily_api_key)
+
+# Initialize the model for the agent
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+
+class AgentState(TypedDict):
+    city: str
+    lat: Optional[float]
+    long: Optional[float]
+    current_time: str
+    interests_summary: str
+    weather_info: str
+    local_event_sources: Dict[str, List[str]] # City -> List of URLs
+    search_plan: List[str]
+    date_ideas: List[Dict[str, Any]]
+    final_html: str
+    messages: List[Any]
+
+# --- Tools ---
+
+@tool
+def check_weather(city: str) -> str:
+    """Checks the current weather for a given city."""
+    try:
+        # Simple search for weather
+        response = tavily_client.search(query=f"current weather in {city}", search_depth="basic")
+        results = response.get("results", [])
+        if results:
+            return results[0].get("content", "Weather data not found.")
+        return "Weather data not found."
+    except Exception as e:
+        return f"Error checking weather: {e}"
+
+@tool
+def find_local_event_sites(city: str) -> List[str]:
+    """Finds websites that list local events for a given city."""
+    try:
+        query = f"best websites for events in {city} today"
+        response = tavily_client.search(query=query, search_depth="basic")
+        results = response.get("results", [])
+        urls = [r.get("url") for r in results[:3]]
+        return urls
+    except Exception as e:
+        print(f"Error finding event sites: {e}")
+        return []
+
+@tool
+def search_dates_tavily(query: str) -> str:
+    """Searches for date ideas using Tavily."""
+    try:
+        response = tavily_client.search(query=query, search_depth="advanced")
+        context = "\n".join([r.get("content", "") for r in response.get("results", [])])
+        return context
+    except Exception as e:
+        return f"Error searching dates: {e}"
+
+# --- Nodes ---
+
+def load_interests(state: AgentState):
+    """Loads interests from the markdown file."""
+    try:
+        with open("interests.md", "r") as f:
+            interests = f.read()
+    except:
+        interests = "No interests file found."
+    return {"interests_summary": interests}
+
+def analyze_interests_node(state: AgentState):
+    """Analyzes interests to generate a search plan."""
+    print("--- Analyzing Interests ---")
+    prompt = f"""
+    Analyze the following interests and the current context to generate 3 specific search queries for date ideas.
+    Consider the user's location ({state['city']}) and the current time ({state['current_time']}).
+    
+    Interests:
+    {state['interests_summary']}
+    
+    Output a JSON list of strings, e.g., ["query 1", "query 2", "query 3"].
+    """
+    response = llm.invoke([HumanMessage(content=prompt)])
+    content = response.content.strip()
+    # Clean up markdown code blocks if present
+    if content.startswith("```json"):
+        content = content[7:-3]
+    elif content.startswith("```"):
+        content = content[3:-3]
+        
+    try:
+        import json
+        search_plan = json.loads(content)
+    except:
+        search_plan = [f"events in {state['city']} today", f"restaurants in {state['city']}", f"activities in {state['city']}"]
+        
+    print(f"Search Plan: {search_plan}")
+    return {"search_plan": search_plan}
+
+def check_weather_node(state: AgentState):
+    """Checks weather and updates state."""
+    print("--- Checking Weather ---")
+    city = state["city"]
+    # We call the tool function directly or via invoke if it's a Tool object
+    # Since we decorated with @tool, check_weather is a StructuredTool
+    try:
+        weather = check_weather.invoke({"city": city})
+    except:
+        weather = "Weather check failed."
+        
+    print(f"Weather: {weather}")
+    return {"weather_info": weather}
+
+def manage_local_sources_node(state: AgentState):
+    """Manages local event sources JSON file."""
+    print("--- Managing Local Sources ---")
+    city = state["city"]
+    file_path = "local_events.json"
+    
+    sources = {}
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r") as f:
+                sources = json.load(f)
+        except:
+            pass
+            
+    city_sources = sources.get(city, [])
+    
+    if not city_sources:
+        print(f"No sources found for {city}, searching...")
+        # Search for sources
+        try:
+            new_sources = find_local_event_sites.invoke({"city": city})
+            if new_sources:
+                sources[city] = new_sources
+                city_sources = new_sources
+                # Save back to file
+                with open(file_path, "w") as f:
+                    json.dump(sources, f, indent=2)
+        except Exception as e:
+            print(f"Error finding sources: {e}")
+    else:
+        print(f"Found cached sources for {city}: {city_sources}")
+        
+    return {"local_event_sources": sources}
+
+def search_dates_node(state: AgentState):
+    """Executes the search plan."""
+    print("--- Searching for Dates ---")
+    search_plan = state["search_plan"]
+    city = state["city"]
+    
+    results = []
+    
+    for query in search_plan:
+        full_query = f"{query} in {city}"
+        print(f"Searching: {full_query}")
+        try:
+            search_result = search_dates_tavily.invoke({"query": full_query})
+            results.append(f"Query: {query}\nResult: {search_result}")
+        except:
+            pass
+        
+    combined_results = "\n\n".join(results)
+    return {"messages": [HumanMessage(content=f"Search Results:\n{combined_results}")]}
+
+def assessment_node(state: AgentState):
+    """Assesses results and generates final output."""
+    print("--- Assessing Results ---")
+    weather = state["weather_info"]
+    current_time = state["current_time"]
+    try:
+        search_results = state["messages"][-1].content
+    except:
+        search_results = "No search results."
+        
+    interests = state["interests_summary"]
+    
+    prompt = f"""
+    You are a romantic date planner.
+    
+    Context:
+    - Location: {state['city']}
+    - Time: {current_time}
+    - Weather: {weather}
+    - User Interests: {interests}
+    
+    Search Results:
+    {search_results}
+    
+    Task:
+    1. Select the best 3 date ideas based on the interests, weather, and practicality.
+    2. If the weather is bad (rain/snow), prioritize indoor activities.
+    3. Ensure the places are likely open at {current_time}.
+    
+    Output:
+    Generate ONLY an HTML string containing 3 <div class="date-card"> elements. 
+    Each card should have a title, description, and reasoning why it fits.
+    Style it beautifully with inline CSS if needed, but the class "date-card" is expected.
+    
+    If you cannot find 3 good distinct ideas, you can fallback to generic but tailored ideas.
+    """
+    
+    response = llm.invoke([HumanMessage(content=prompt)])
+    content = response.content
+    
+    # Strip markdown if present
+    if "```html" in content:
+        content = content.split("```html")[1].split("```")[0].strip()
+    elif "```" in content:
+        content = content.replace("```", "").strip()
+        
+    return {"final_html": content}
+
+# --- Graph ---
+
+workflow = StateGraph(AgentState)
+
+workflow.add_node("load_interests", load_interests)
+workflow.add_node("analyze_interests", analyze_interests_node)
+workflow.add_node("check_weather", check_weather_node)
+workflow.add_node("manage_local_sources", manage_local_sources_node)
+workflow.add_node("search_dates", search_dates_node)
+workflow.add_node("assessment", assessment_node)
+
+workflow.set_entry_point("load_interests")
+workflow.add_edge("load_interests", "check_weather")
+workflow.add_edge("check_weather", "manage_local_sources")
+workflow.add_edge("manage_local_sources", "analyze_interests")
+workflow.add_edge("analyze_interests", "search_dates")
+workflow.add_edge("search_dates", "assessment")
+workflow.add_edge("assessment", END)
+
+app_agent = workflow.compile()
+
+def generate_date_ideas_agentic(lat, long, city, current_time):
+    """
+    Wrapper function to run the agentic pipeline.
+    """
+    initial_state = {
+        "city": city,
+        "lat": lat,
+        "long": long,
+        "current_time": current_time,
+        "interests_summary": "",
+        "weather_info": "",
+        "local_event_sources": {},
+        "search_plan": [],
+        "date_ideas": [],
+        "final_html": "",
+        "messages": []
+    }
+    
+    try:
+        result = app_agent.invoke(initial_state)
+        return result["final_html"]
+    except Exception as e:
+        print(f"Error in agentic pipeline: {e}")
+        return f"<div class='error'>Error generating recommendations: {e}</div>"
+
 
