@@ -1,0 +1,92 @@
+[
+  {
+    "location": "Edmonton",
+    "scores": {
+      "faithfulness_score": 4,
+      "faithfulness_reasoning": "The agent accurately used the search results to suggest real events happening in Edmonton on the given date. The Silver Skate Festival and Sweet Treats & Latte Festival are both mentioned in the search results. The Royal Alberta Museum is a real location, and the agent correctly identified it as a place for cultural immersion. The Melting Pot is a real restaurant, and the agent plausibly suggested a 'Lovers' Lane' booth. However, the agent makes an assumption that The Melting Pot is opening early for Valentine's weekend which is not supported by the search context. Also, the Chinese New Year celebrations and the \"Pink Paradise\" sketching event at RAM are not directly validated from the search context, it only mentions Black History and Futures Month and other events.",
+      "relevance_score": 5,
+      "relevance_reasoning": "All three recommendations are highly relevant to the user's interests. The first suggestion combines outdoor activities with a sweet treat crawl, matching their love for ice cream and exploration. The second suggestion focuses on Korean food (specifically spicy beef stew, which Mandy enjoys) and cultural experiences. The third suggestion offers a cozy fondue experience (similar to their love for hotpot) followed by indoor activities like gaming and cuddling, catering to their preference for comfort and relaxation."
+    }
+  },
+  {
+    "location": "Vancouver",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent hallucinates several events and details. Fan Expo Vancouver is a real event, but it's unclear if it's happening on the specified date (Feb 20, 2026 - assumed from context). The Vancouver Zoo Spring Festival is not found in the search results. The agent also states that the user can drive back to Chinatown for food, implying the Zoo is far when it is actually located in the suburbs of Vancouver. While Pilates and Hotpot are valid activities, the detail about Mandy teaching David advanced moves and the specific mention of Hillcrest Aquatic Centre are not supported by the search results. The recommendation of Earnest Ice Cream is valid as it was mentioned as a preferred shop.",
+      "relevance_score": 4,
+      "relevance_reasoning": "The recommendations generally align with the user's interests in anime, animals, spicy food (Vietnamese and Korean), hotpot, and ice cream. The suggested activities incorporate these interests well. The location (Vancouver) is also considered. However, the first suggestion is more speculative based on the user's anime interest."
+    }
+  },
+  {
+    "location": "New York",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent suggests several specific restaurants and locations (Hyun, AIRE Ancient Baths, Banh Anh Em, The Morgan Library & Museum, Ishq, Adda) without providing any evidence that these are supported by the search context. The search context does not mention any specific restaurants or locations that align with the user's interests. The agent seems to be hallucinating these places. The activities mentioned (anime marathon, spa, Indian buffet) are not directly supported by the search context either, though they are general activities that could exist in New York.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the user's interests. All the suggestions incorporate the user's preferences for food (Korean, Vietnamese, Indian, ice cream), activities (anime, cuddling, spa, museums), and the fact that it is snowing in New York. The suggestions are all indoor activities, making them suitable for the weather. The reasoning provided for each option is also well-aligned with the user's stated preferences and the given scenario."
+    }
+  },
+  {
+    "location": "Tokyo",
+    "scores": {
+      "faithfulness_score": 4,
+      "faithfulness_reasoning": "The Yushima Tenjin Ume Matsuri is mentioned in the search context. The other places are not directly mentioned but are plausible given the context of Tokyo and general interests. The details about the Ume Matsuri seem accurate based on the text provided.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations strongly align with the user's interests. The first option combines the plum blossom festival (scenic, seasonal event) with spicy ramen (Korean food interest). The second option combines a sensory experience with hotpot. The third option combines shopping with ice cream. All are located in Tokyo and seem like appropriate date ideas."
+    }
+  },
+  {
+    "location": "London",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The agent suggests Kiln, Japan House London, Haidilao Hotpot, Draughts Waterloo, SEA LIFE London Aquarium, and Dishoom. All these locations are real and exist in London. However, the search context only contains generic event listings and does not directly support these specific restaurant/aquarium recommendations. The agent is relying on external knowledge rather than being grounded in the provided search results.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the user's interests. The agent effectively incorporates the user's preferences for spicy food (Thai, Korean Beef Stew), hotpot, ice cream (Dishoom's Chai as a substitute), cute animals (SEA LIFE), and board games. The suggestions also consider the cold London weather, proposing indoor activities. The mention of Mandy's preferences further enhances the relevance."
+    }
+  },
+  {
+    "location": "Paris",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The agent provides a few specific location recommendations. However, the search context only includes general event listings for Paris and Chinese New Year parades. Therefore, the agent is hallucinating specific restaurant and spa recommendations (Soon Grill Marais, Fragments, Les Bains Guerbois, Piscine Pontoise, Passage des Panoramas, Passage Jouffroy, Le Valentin). These were not retrieved by the search query, and thus cannot be confirmed using the provided context.",
+      "relevance_score": 4,
+      "relevance_reasoning": "The recommendations align reasonably well with the user's interests. The suggestions cater to the user's preferences for Korean food (spicy beef stew), indoor activities due to the rainy weather, wellness activities (swimming, active recovery), and cozy environments for conversation and games. The recommendations also consider the user's interest in exploring unique places like covered passages. The agent tries to tailor the recommendations based on the weather conditions in Paris and the user's desire for warmth and comfort."
+    }
+  },
+  {
+    "location": "Sydney",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent hallucinates events and locations. The Lunar Festival Feast & Chinatown Zouk idea is not supported by the search context, as the search only mentions the Sydney calendar being full of events. The specific restaurant (Yan Restaurant) and the Zouk dance event are not mentioned. Similarly, the Pilates in the Park & Greek Deli Picnic idea, including the restaurant Olympus Dining and Ambi's Chai Bar, are not supported by the search context. The Harbour Ferries & Cute Critter spotting is partially supported as the search mentions harbour cruises, but the overall scenario with the specific zoo and ice cream shop is not.",
+      "relevance_score": 4,
+      "relevance_reasoning": "The recommendations show some relevance to the user's interests. The Lunar Festival Feast caters to the interest in Korean food and spicy flavors. The Pilates in the Park caters to the shared fitness interests. The Harbour Ferries & Cute Critter spotting aligns with the interest in 'cute animals' and the enjoyment of water views and ice cream. However, the activities and food are not directly mentioned in the user's interests but are reasonable inferences."
+    }
+  },
+  {
+    "location": "Austin",
+    "scores": {
+      "faithfulness_score": 4,
+      "faithfulness_reasoning": "The agent suggests several real places: Elizabeth Street Cafe, Barton Creek Greenbelt, and La Condesa. It also correctly identifies the Austin Marathon happening downtown. However, it makes some assumptions and adds details not present in the search context or user history, such as Pilates certification, 'Anejo' meals, and 'sexy burrito kitten' cuddles which impact the faithfulness score slightly.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The agent does an excellent job of tailoring the date recommendations to the user's stated interests. It incorporates preferences for ice cream, Korean food (specifically spicy Korean beef stew), hotpot, and the fact that Mandy enjoys hiking, Vietnamese food, and pilates. It also considers the location (Austin) and the fact that the Austin Marathon is happening, suggesting activities that avoid the downtown area. The 'Why it fits' sections further highlight the relevance of each suggestion."
+    }
+  },
+  {
+    "location": "Berlin",
+    "scores": {
+      "faithfulness_score": 4,
+      "faithfulness_reasoning": "The agent suggests attending the Berlinale and Tanzolymp, which are both events listed in the search context. However, it also mentions specific restaurants and spas (Fes Turkish BBQ, Vabali Spa, Vietnamese restaurants for Pho) that are not directly validated by the search context. The details regarding the events mentioned (Berlinale, Tanzolymp) are consistent with the provided search results.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the user's interests. The agent effectively combines the user's interest in movies/anime (Berlinale), dance/movement (Tanzolymp), and food preferences like Korean beef stew and spicy food. The suggestions also consider the Berlin location and the cold weather, proposing indoor activities and warming food options. The wellness escape aligns with their shared enjoyment of swimming, hot tubs, and saunas."
+    }
+  },
+  {
+    "location": "Toronto",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The Heritage Antique Market recommendation is faithful as it is present in the search results. However, the other recommendations (DOMA, Sweet City Festival, Oretta, Pho Tien Thanh, Pho Hung) are not present in the search context. The agent is hallucinating these places/events.",
+      "relevance_score": 4,
+      "relevance_reasoning": "The recommendations are generally relevant to the user interests. The agent considers the user's interest in Korean food, spicy food, board games, home DIY, and staying indoors due to the cold weather. The Wellness & Wood-Fired Elegance suggestion is less directly supported by the provided interests but connects to the idea of relaxation and quality dining. The locations are all in Toronto, matching the location context."
+    }
+  }
+]

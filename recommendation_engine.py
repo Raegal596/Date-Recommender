@@ -114,7 +114,7 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
     # Create a chat session with the tool
     # We configure the chat with the tool, but we will override the config for the first message
     chat = client.chats.create(
-        model='gemini-2.0-flash',
+        model='gemini-3-flash-preview',
         config=types.GenerateContentConfig(
             tools=[search_web_official],
             temperature=0.7,
@@ -206,7 +206,7 @@ tavily_api_key = os.getenv("TAVILY_API_KEY")
 tavily_client = TavilyClient(api_key=tavily_api_key)
 
 # Initialize the model for the agent
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+llm = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", google_api_key=api_key)
 
 class AgentState(TypedDict):
     city: str
@@ -283,7 +283,10 @@ def analyze_interests_node(state: AgentState):
     Output a JSON list of strings, e.g., ["query 1", "query 2", "query 3"].
     """
     response = llm.invoke([HumanMessage(content=prompt)])
-    content = response.content.strip()
+    content = response.content
+    if isinstance(content, list):
+        content = " ".join([str(p) for p in content])
+    content = content.strip()
     # Clean up markdown code blocks if present
     if content.startswith("```json"):
         content = content[7:-3]
@@ -406,6 +409,8 @@ def assessment_node(state: AgentState):
     
     response = llm.invoke([HumanMessage(content=prompt)])
     content = response.content
+    if isinstance(content, list):
+        content = " ".join([str(p) for p in content])
     
     # Strip markdown if present
     if "```html" in content:
@@ -436,7 +441,7 @@ workflow.add_edge("assessment", END)
 
 app_agent = workflow.compile()
 
-def generate_date_ideas_agentic(lat, long, city, current_time):
+def generate_date_ideas_agentic(lat, long, city, current_time, return_full_state=False):
     """
     Wrapper function to run the agentic pipeline.
     """
@@ -456,9 +461,13 @@ def generate_date_ideas_agentic(lat, long, city, current_time):
     
     try:
         result = app_agent.invoke(initial_state)
+        if return_full_state:
+            return result
         return result["final_html"]
     except Exception as e:
         print(f"Error in agentic pipeline: {e}")
+        if return_full_state:
+            return {"final_html": f"<div class='error'>Error: {e}</div>", "error": str(e)}
         return f"<div class='error'>Error generating recommendations: {e}</div>"
 
 

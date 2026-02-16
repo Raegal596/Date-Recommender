@@ -3,5 +3,50 @@
     "https://do604.com/",
     "https://www.eventbrite.com/d/canada--vancouver/events--today/",
     "https://www.reddit.com/r/vancouver/comments/14ieac3/best_source_to_keep_up_with_cool_events_happening/"
+  ],
+  "Edmonton": [
+    "https://www.eventbrite.com/d/canada--edmonton/events--today/",
+    "https://www.eventbrite.com/d/canada--edmonton/events/",
+    "https://exploreedmonton.com/event-calendar"
+  ],
+  "New York": [
+    "https://www.eventbrite.com/d/ny--new-york/events--today/",
+    "https://www.facebook.com/groups/what.to.do.in.new.york/posts/2619423608390263/",
+    "https://www.reddit.com/r/AskNYC/comments/2gdxwn/best_sites_to_discover_whats_happening_in_nyc/"
+  ],
+  "Tokyo": [
+    "https://www.eventbrite.com/d/japan--tokyo/events--today/",
+    "https://www.gotokyo.org/en/event-calendar/index.html",
+    "https://www.meetup.com/find/jp--tokyo/"
+  ],
+  "London": [
+    "https://www.eventbrite.com/d/united-kingdom--london/events--today/",
+    "https://www.timeout.com/london",
+    "https://www.meetup.com/find/gb--17--london/"
+  ],
+  "Paris": [
+    "https://www.eventbrite.com/d/france--paris/events--today/",
+    "https://eskapas.com/best-events-in-paris/",
+    "https://parisjetaime.com/eng/article/current-events-in-paris-a1696"
+  ],
+  "Sydney": [
+    "https://www.myguidesydney.com/events/today",
+    "https://www.eventbrite.com/d/australia--sydney/events--today/",
+    "https://www.meetup.com/find/au--sydney/"
+  ],
+  "Austin": [
+    "https://www.eventbrite.com/d/tx--austin/events--today/",
+    "https://atxtoday.6amcity.com/events",
+    "https://www.tourtexas.com/destinations/austin-events"
+  ],
+  "Berlin": [
+    "https://www.quora.com/What-are-the-best-event-sites-listings-for-Berlin",
+    "https://www.berlin.de/en/tickets/today/",
+    "https://www.eventbrite.com/d/germany--berlin/events--today/"
+  ],
+  "Toronto": [
+    "https://www.eventbrite.com/d/canada--toronto/events--today/",
+    "https://feverup.com/en/toronto?srsltid=AfmBOooe25_muboH9VOFQcfT1N9B6D5jX5N-ffyhXgtCYBXmnRpKSu6O",
+    "https://www.destinationtoronto.com/events/"
   ]
 }
