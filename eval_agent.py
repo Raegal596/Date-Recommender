@@ -10,13 +10,13 @@ sys.path.append(os.getcwd())
 # Load env vars
 load_dotenv()
 
-from recommendation_engine import generate_date_ideas_agentic
+from recommendation_engine import generate_date_ideas_agentic, extract_json
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
 # Initialize Evaluator LLM
 api_key = os.getenv("GEMINI_API_KEY")
-eval_llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+eval_llm = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", google_api_key=api_key)
 
 LOCATIONS = [
     {"city": "Edmonton", "lat": 53.5461, "long": -113.4938},
@@ -77,8 +77,8 @@ def evaluate_run(location: Dict[str, Any], result_state: Dict[str, Any]):
     
     try:
         response = eval_llm.invoke(prompt)
-        content = response.content.replace("```json", "").replace("```", "").strip()
-        return json.loads(content)
+        content = response.content
+        return extract_json(content)
     except Exception as e:
         return {
             "faithfulness_score": 0,
@@ -124,7 +124,7 @@ def run_evaluation():
     print(f"Average Relevance: {avg_rel:.2f}/5")
     
     # Save detailed results
-    with open("eval_results.json", "w") as f:
+    with open("eval_results_gemmini_3_flash_20_search.json", "w") as f:
         json.dump(results, f, indent=2)
     print("Detailed results saved to eval_results.json")
 

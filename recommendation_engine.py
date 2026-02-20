@@ -15,10 +15,80 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 from tavily import TavilyClient
+import re
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
+
+
+def extract_json(text: str) -> Any:
+    """
+    Robustly extracts JSON from a string, handling Markdown code blocks and surrounding text.
+    """
+    text = text.strip()
+    
+    # Try to find JSON block in markdown
+    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text, re.IGNORECASE)
+    if match:
+        text = match.group(1)
+    
+    # Try to clean up if it's just a raw list or dict with extra text around it
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+        
+    # If failed, try to find the substring
+    # This regex looks for the outermost {} or [] pair
+    # It's a heuristic and might fail on nested structures if not careful, but works for most LLM outputs
+    
+    # Find first '[' or '{'
+    start_idx = -1
+    
+    first_brace = text.find('{')
+    first_bracket = text.find('[')
+    
+    if first_brace == -1 and first_bracket == -1:
+         # No JSON structure found
+         raise ValueError(f"No JSON structure found in text: {text[:50]}...")
+         
+    if first_brace != -1 and (first_bracket == -1 or first_brace < first_bracket):
+        start_char = '{'
+        end_char = '}'
+        start_idx = first_brace
+    else:
+        start_char = '['
+        end_char = ']'
+        start_idx = first_bracket
+        
+    # Find the matching closing bracket
+    depth = 0
+    for i in range(start_idx, len(text)):
+        char = text[i]
+        j = i
+        if char == start_char:
+            depth += 1
+        elif char == end_char:
+            depth -= 1
+            if depth == 0:
+                json_str = text[start_idx:i+1]
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                     # Continue searching if this one failed
+                     pass 
+    
+    # Fallback: simple trimming to last occurrence
+    last_brace = text.rfind(end_char)
+    if last_brace != -1:
+         json_str = text[start_idx:last_brace+1]
+         try:
+             return json.loads(json_str)
+         except:
+             pass
+
+    raise ValueError(f"Could not extract JSON from text: {text[:100]}...")
 
 def search_web(query: str) -> str:
     """
@@ -185,10 +255,12 @@ def generate_date_ideas(lat, long, city, interests_summary, current_time):
         # Try to extract text manually if possible, or return a fallback
         try:
              if response.candidates and response.candidates[0].content.parts:
+                 text_parts = []
                  for part in response.candidates[0].content.parts:
                      if part.text:
-                         text_response = part.text
-                         break
+                         text_parts.append(part.text)
+                 if text_parts:
+                     text_response = "".join(text_parts)
         except:
             pass
 
@@ -274,7 +346,7 @@ def analyze_interests_node(state: AgentState):
     """Analyzes interests to generate a search plan."""
     print("--- Analyzing Interests ---")
     prompt = f"""
-    Analyze the following interests and the current context to generate 3 specific search queries for date ideas.
+    Analyze the following interests and the current context to generate 20 specific search queries for date ideas.
     Consider the user's location ({state['city']}) and the current time ({state['current_time']}).
     
     Interests:
@@ -284,19 +356,44 @@ def analyze_interests_node(state: AgentState):
     """
     response = llm.invoke([HumanMessage(content=prompt)])
     content = response.content
+    
+    # Handle list content from LangChain (can be list of parts or strings)
     if isinstance(content, list):
-        content = " ".join([str(p) for p in content])
-    content = content.strip()
-    # Clean up markdown code blocks if present
-    if content.startswith("```json"):
-        content = content[7:-3]
-    elif content.startswith("```"):
-        content = content[3:-3]
+        text_parts = []
+        for p in content:
+            if isinstance(p, str):
+                text_parts.append(p)
+            elif isinstance(p, dict) and "text" in p:
+                text_parts.append(p["text"])
+            elif hasattr(p, "text"):
+                text_parts.append(p.text)
+            else:
+                 # Fallback: try to guess or just stringify
+                text_parts.append(str(p))
+        content = "".join(text_parts)
         
+    content = content.strip()
+
+    # Clean up markdown code blocks if present
+    # if content.startswith("```json"):
+    #     content = content[7:-3]
+    # elif content.startswith("```"):
+    #     content = content[3:-3]
+    
+    print(f"Draft Search Plan: {content}")
+
     try:
-        import json
-        search_plan = json.loads(content)
-    except:
+        # import json # Already imported globally
+        search_plan = extract_json(content)
+        # Verify it's a list
+        if not isinstance(search_plan, list):
+             # If it's a dict like {"plan": [...]}, try to extract extraction
+             if isinstance(search_plan, dict):
+                 search_plan = list(search_plan.values())[0] # Very naive fallback
+             if not isinstance(search_plan, list):
+                 raise ValueError("Extracted JSON is not a list")
+    except Exception as e:
+        print(f"Error parsing search plan: {e}")
         search_plan = [f"events in {state['city']} today", f"restaurants in {state['city']}", f"activities in {state['city']}"]
         
     print(f"Search Plan: {search_plan}")
@@ -404,13 +501,32 @@ def assessment_node(state: AgentState):
     Each card should have a title, description, and reasoning why it fits.
     Style it beautifully with inline CSS if needed, but the class "date-card" is expected.
     
-    If you cannot find 3 good distinct ideas, you can fallback to generic but tailored ideas.
+    If you cannot find 3 good distinct ideas, you can should generate some new ideas to search 
+    and call the search_dates node again. Likewise, if you need more details to refine the
+    date ideas, you can call the search_dates node again. Call search_dates_node() a maximum
+    of 2 times before generating the final output.
+    
+    If you are still unable to generate 3 good distinct ideas, generate a final output with
+    the best ideas you have.
     """
     
     response = llm.invoke([HumanMessage(content=prompt)])
     content = response.content
+    
+    # Handle list content from LangChain (can be list of parts or strings)
     if isinstance(content, list):
-        content = " ".join([str(p) for p in content])
+        text_parts = []
+        for p in content:
+            if isinstance(p, str):
+                text_parts.append(p)
+            elif isinstance(p, dict) and "text" in p:
+                text_parts.append(p["text"])
+            elif hasattr(p, "text"):
+                text_parts.append(p.text)
+            else:
+                 # Fallback: try to guess or just stringify
+                text_parts.append(str(p))
+        content = "".join(text_parts)
     
     # Strip markdown if present
     if "```html" in content:
@@ -437,6 +553,7 @@ workflow.add_edge("check_weather", "manage_local_sources")
 workflow.add_edge("manage_local_sources", "analyze_interests")
 workflow.add_edge("analyze_interests", "search_dates")
 workflow.add_edge("search_dates", "assessment")
+#workflow.add_edge("assessment", "search_dates")
 workflow.add_edge("assessment", END)
 
 app_agent = workflow.compile()
