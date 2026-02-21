@@ -53,10 +53,12 @@ def evaluate_run(location: Dict[str, Any], result_state: Dict[str, Any]):
     You are an expert evaluator for a date recommendation agent.
     
     Input Data:
-    - User Interests: {interests[:500]}... (truncated)
+    - User Interests: 
+    {interests}
+    
     - Location: {city}
     - Search Context (Ground Truth): 
-      {search_context[:2000]}... (truncated)
+    {search_context}
     
     Agent Output:
     {output_html}
@@ -124,7 +126,7 @@ def run_evaluation():
     print(f"Average Relevance: {avg_rel:.2f}/5")
     
     # Save detailed results
-    with open("eval_results/eval_results_gemini_3_flash_20_search_v3.json", "w") as f:
+    with open("eval_results/eval_results_gemini_3_flash_20_search_untruncated.json", "w") as f:
         json.dump(results, f, indent=2)
     print("Detailed results saved to eval_results.json")
 

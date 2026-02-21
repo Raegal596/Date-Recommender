@@ -1,5 +1,6 @@
 
 import os
+import concurrent.futures
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -470,14 +471,21 @@ def search_dates_node(state: AgentState):
     
     results = []
     
-    for query in search_plan:
+    def fetch_result(query):
         full_query = f"{query} in {city}"
         print(f"Searching: {full_query}")
         try:
             search_result = search_dates_tavily.invoke({"query": full_query})
-            results.append(f"Query: {query}\nResult: {search_result}")
+            return f"Query: {query}\nResult: {search_result}"
         except:
-            pass
+            return None
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(fetch_result, query) for query in search_plan]
+        for future in concurrent.futures.as_completed(futures):
+            res = future.result()
+            if res:
+                results.append(res)
         
     combined_results = "\n\n".join(results)
     return {"messages": [HumanMessage(content=f"Search Results:\n{combined_results}")]}
@@ -512,17 +520,21 @@ def assessment_node(state: AgentState):
     3. Ensure the places are likely open at {current_time}.
     
     Output:
-    Generate ONLY an HTML string containing 3 <div class="date-card"> elements. 
+    You MUST output ONLY a valid JSON object with the following structure:
+    {{
+        "final_html": "<div class='date-card'>...</div>",
+        "date_ideas": [
+            {{"title": "Idea Name", "description": "Brief summary", "reasoning": "Why it fits"}}
+        ]
+    }}
+    
+    The 'final_html' should contain 3 <div class="date-card"> elements. 
     Each card should have a title, description, and reasoning why it fits.
     Style it beautifully with inline CSS if needed, but the class "date-card" is expected.
     
-    If you cannot find 3 good distinct ideas, you can should generate some new ideas to search 
-    and call the search_dates node again. Likewise, if you need more details to refine the
-    date ideas, you can call the search_dates node again. Call search_dates_node() a maximum
+    If you cannot find 3 good distinct ideas, you can generate some new ideas to search 
+    and call the search_dates node again. Call search_dates_node() a maximum
     of 2 times before generating the final output.
-    
-    If you are still unable to generate 3 good distinct ideas, generate a final output with
-    the best ideas you have.
     """
     
     response = llm.invoke([HumanMessage(content=prompt)])
@@ -543,13 +555,23 @@ def assessment_node(state: AgentState):
                 text_parts.append(str(p))
         content = "".join(text_parts)
     
-    # Strip markdown if present
-    if "```html" in content:
-        content = content.split("```html")[1].split("```")[0].strip()
-    elif "```" in content:
-        content = content.replace("```", "").strip()
+    # Try parsing JSON
+    try:
+        parsed = extract_json(content)
+        final_html = parsed.get("final_html", "")
+        date_ideas = parsed.get("date_ideas", [])
+    except Exception as e:
+        print(f"Error parsing assessment output: {e}")
+        # Fallback
+        if "```html" in content:
+            final_html = content.split("```html")[1].split("```")[0].strip()
+        elif "```" in content:
+            final_html = content.replace("```", "").strip()
+        else:
+            final_html = content
+        date_ideas = []
         
-    return {"final_html": content}
+    return {"final_html": final_html, "date_ideas": date_ideas}
 
 # --- Graph ---
 
@@ -573,6 +595,9 @@ workflow.add_edge("assessment", END)
 
 app_agent = workflow.compile()
 
+from langsmith import traceable
+
+@traceable(name="date_recommender_agent")
 def generate_date_ideas_agentic(lat, long, city, current_time, return_full_state=False):
     """
     Wrapper function to run the agentic pipeline.
@@ -581,14 +606,7 @@ def generate_date_ideas_agentic(lat, long, city, current_time, return_full_state
         "city": city,
         "lat": lat,
         "long": long,
-        "current_time": current_time,
-        "interests_summary": "",
-        "weather_info": "",
-        "local_event_sources": {},
-        "search_plan": [],
-        "date_ideas": [],
-        "final_html": "",
-        "messages": []
+        "current_time": current_time
     }
     
     try:
