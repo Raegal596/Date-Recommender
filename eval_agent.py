@@ -124,7 +124,7 @@ def run_evaluation():
     print(f"Average Relevance: {avg_rel:.2f}/5")
     
     # Save detailed results
-    with open("eval_results_gemmini_3_flash_20_search.json", "w") as f:
+    with open("eval_results/eval_results_gemini_3_flash_20_search_v3.json", "w") as f:
         json.dump(results, f, indent=2)
     print("Detailed results saved to eval_results.json")
 

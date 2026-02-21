@@ -1,0 +1,92 @@
+[
+  {
+    "location": "Edmonton",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The agent accurately utilizes the search context for the second recommendation, correctly identifying 97 Hotpot (AYCE) and Chili Hot Pot (Szechuan/spicy) as top choices in Edmonton. However, the search context provided focuses exclusively on hotpot restaurants. The recommendations for the Muttart Conservatory, IL Poom Korean Restaurant, Hexagon Board Game Cafe, and Kind Ice Cream are not supported by the provided search context, even though they are real locations in Edmonton. The agent relies heavily on external knowledge not present in the 'Ground Truth' snippet provided.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are exceptionally well-aligned with the user's specific interests. The agent correctly identifies Edmonton as the location and incorporates Mandy's specific preferences for Mint Chip ice cream (suggesting a local shop since her mentioned 'Earnest' is not in Edmonton), Korean Spicy Beef Stew (Yukgaejang), and hotpot. It also considers the winter weather (-18\u00b0C) mentioned in the description, providing indoor-appropriate activities like the conservatory and hotpot, making the suggestions highly practical and personalized."
+    }
+  },
+  {
+    "location": "Vancouver",
+    "scores": {
+      "faithfulness_score": 4,
+      "faithfulness_reasoning": "The first recommendation (SURA) is strongly supported by the Search Context, accurately identifying the Yukgae-jang stew, its spicy nature, and the restaurant's reputation. While the provided Search Context snippet is truncated and doesn't explicitly show results for the board game cafe, N\u012bzu Cafe, or the aquatic centre, these are all real-world locations in Vancouver. The agent correctly links the 'Earnest' mention in User Interests to its real-world location on Quebec St.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the provided user profile. It captures specific nuances like Mandy's preference for Mint Chip ice cream and Earnest specifically, her craving for spicy Korean beef stew, and her Pilates certification. It also aligns perfectly with the Vancouver location and incorporates David's interests (strategy games and running recovery) effectively."
+    }
+  },
+  {
+    "location": "New York",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent's output relies almost entirely on external knowledge not present in the provided Search Context. Only Nangman BBQ is mentioned in the context, yet the agent recommends numerous other specific venues (Pilates Reforming NY, A\u00f1ejo, AIRE Ancient Baths, The Uncommons, etc.). Additionally, for Nangman BBQ, the agent recommends ordering 'Yukgaejang' (Spicy Beef Stew); however, the Search Context explicitly lists the four stews served there (Doenjang, Kimchi, Budae, and Soondubu Jjigae), and Yukgaejang is not included in that list.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant and perfectly aligned with the detailed User Interests provided. The agent successfully incorporated specific hobbies (Pilates teaching, board games like Hanabi), specific food cravings (spicy Korean beef stew, Mint Chip ice cream), and even personal future plans (travel to Portugal/Iceland). The locations are also correctly situated in New York as requested."
+    }
+  },
+  {
+    "location": "Tokyo",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The agent correctly utilizes the provided Search Context for the first recommendation, 'Macchan', accurately noting its location in Shin-Okubo and its specialty in stews like Sundubu-jjigae. However, the search context provided contains no information regarding the other venues (Spa LaQua, Mumbai Yotsuya, DyCE Global Board Game Cafe, Sky Pilates, etc.) or the specific date/weather details (Feb 15th, 14\u00b0C). While these are real places in Tokyo, they are not 'supported by the Search Context' as required by the metric.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the User Interests. It incorporates Mandy's specific food preferences (Spicy Korean Beef Stew, Indian Food, Mint Chip Ice Cream), her career/hobby interests (Pilates, Running), and shared activities (Board Games, Saunas/Wellness). The locations are all accurately placed within the requested city (Tokyo)."
+    }
+  },
+  {
+    "location": "London",
+    "scores": {
+      "faithfulness_score": 1,
+      "faithfulness_reasoning": "The agent output is entirely unsupported by the provided Search Context. The search results focus exclusively on YORI Korean restaurants across various London locations for 'Yukgaejang'. However, the agent recommends 'Chung\u2019dam' for the Korean meal and several other venues (Exhale Pilates, Nobu Wellness Centre, Draughts, Udderlicious) that do not appear in the search results at all. While these are real places in London, they are not 'faithful' to the provided ground truth context.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are highly relevant to the User Interests. The agent successfully incorporated specific details from the interest profile: the preference for spicy Korean beef stew (Yukgaejang) and hotpot, Mandy's background in Pilates, the couple's interest in cooperative games like Hanabi, and Mandy's specific favorite ice cream flavor (Mint Chip). The suggestions are also correctly localized to London."
+    }
+  },
+  {
+    "location": "Paris",
+    "scores": {
+      "faithfulness_score": 3,
+      "faithfulness_reasoning": "The agent is highly faithful to the provided search context regarding 'Sam Chic,' correctly identifying it as a spot for interactive hotpot and 'Spicy Beef Stew' (which the context calls 'spicy ragout beef ... in a stone pot'). However, the majority of the other recommended venues (Jaipur Caf\u00e9, Pho Bom, Folderol, L'Oya, etc.) are not mentioned in the provided search context snippet. While these are real places in Paris, they are not supported by the 'Ground Truth' data provided in the prompt.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are exceptionally relevant to the user's profile. The agent successfully incorporated specific niche interests such as Mint Chip ice cream (Folderol), spicy Korean Beef Stew (Sam Chic), Indian food (Jaipur Caf\u00e9), and the user's Pilates certification journey. It also correctly placed all activities in the requested location (Paris) and suggested indoor activities suitable for the mentioned overcast weather."
+    }
+  },
+  {
+    "location": "Sydney",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "While the recommended places (Bodylove Pilates, Reuben Hills, Gelato Messina, Spice World, Dice Inn, Sydney Zoo) are real locations in Sydney, the provided Search Context only contains information about hotpot restaurants in Haymarket. The agent relies almost entirely on external knowledge rather than the provided search snippets to suggest activities related to Pilates, board games, and quokkas. Furthermore, specific details mentioned (like the 'Barbie doll' serving style at Spice World or the 'Jackknife' Pilates move) are not found in the search context.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are perfectly aligned with the user interests. The agent correctly identified and incorporated specific hobbies (Pilates, strategy board games like Hanabi), specific food preferences (Mint Chip ice cream, Hotpot, spicy food), and even niche interests (quokkas). It also correctly pivoted from 'Earnest' ice cream (a Vancouver brand mentioned by the user) to 'Gelato Messina' (a famous Sydney brand) to fit the Sydney location."
+    }
+  },
+  {
+    "location": "Austin",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent identifies 'An Nyeong K Tofu and BBQ' correctly from the search context, including its specialty in spicy Korean stew. However, the vast majority of the other recommended venues (Purrfecto Cat Lounge, Amy's Ice Creams, Texas Farmers\u2019 Market at Mueller, Mueller Lake Park, Ballet Austin, Soupleaf Hot Pot, and Vigilante Gastropub) are not present in the provided Search Context. While these are real locations in Austin, a date recommendation agent should rely on the provided search results to ensure the data is current and verified by the system's tools; here, it relied almost entirely on internal knowledge/hallucination relative to the provided ground truth.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are exceptionally well-aligned with the User Interests. They specifically incorporate the preference for Mint Chip ice cream (even naming a specific flavor), spicy Korean beef stew, hotpot, and home cooking/grocery shopping. The locations are all correctly situated in Austin, and the logic for 'why it fits' directly addresses the user's specific profile points."
+    }
+  },
+  {
+    "location": "Berlin",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "While the recommendation for YamYam and its Yukgaejang is directly supported by the Search Context, the vast majority of the other recommendations (Vabali Spa, Ryong, Dice Heart, Spielwiese, Green Tea Caf\u00e9 MAMECHA, Chakra, SORI KONO, and Monster Ronson\u2019s) are not mentioned in the provided Search Context at all. The agent used external knowledge rather than relying on the provided search results to verify these locations.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The agent did an excellent job of aligning the date ideas with the User Interests. It specifically addressed Mandy's preference for spicy Korean Beef Stew (Yukgaejang), Indian buffets, Matcha, and strategy games. It also correctly placed all activities within the specified location (Berlin) and created logical itineraries based on those interests."
+    }
+  },
+  {
+    "location": "Toronto",
+    "scores": {
+      "faithfulness_score": 2,
+      "faithfulness_reasoning": "The agent hallucinates that 'Daldongnae Korean BBQ' is noted in the search results and provides specific details about its 'retro moon village' vibe as if it came from the context, but this restaurant does not appear in the provided Search Context at all. Additionally, the majority of the recommended locations (Allan Gardens, Elmwood Spa, Ph\u1edf Anh V\u0169, Vintage Cat Caf\u00e9, The Guild House, Inhabit Pilates, Ed\u2019s Real Scoop) are entirely absent from the search context provided, which focused exclusively on Korean restaurants. While these places are real Toronto locations, the agent failed to rely on the provided ground truth for the bulk of its recommendations.",
+      "relevance_score": 5,
+      "relevance_reasoning": "The recommendations are exceptionally well-aligned with the user interests. The agent correctly incorporated Mandy's specific preference for Mint Chip ice cream, her career in Pilates, David's interest in strategy games, their shared interest in cats and tropical aesthetics, and the specific request for Spicy Korean Beef Stew. The locations are all situated in Toronto, matching the requested location perfectly."
+    }
+  }
+]

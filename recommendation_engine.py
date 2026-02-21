@@ -22,10 +22,25 @@ api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
 
-def extract_json(text: str) -> Any:
+def extract_json(text: Any) -> Any:
     """
     Robustly extracts JSON from a string, handling Markdown code blocks and surrounding text.
     """
+    if isinstance(text, list):
+        text_parts = []
+        for p in text:
+            if isinstance(p, str):
+                text_parts.append(p)
+            elif isinstance(p, dict) and "text" in p:
+                text_parts.append(p["text"])
+            elif hasattr(p, "text"):
+                text_parts.append(getattr(p, "text"))
+            else:
+                text_parts.append(str(p))
+        text = "".join(text_parts)
+    elif not isinstance(text, str):
+        text = str(text)
+        
     text = text.strip()
     
     # Try to find JSON block in markdown
