@@ -29,13 +29,22 @@
 
                 navigator.geolocation.getCurrentPosition(success, error);
 
-                function success(position) {
+                async function success(position) {
                     const latitude = position.coords.latitude;
                     const longitude = position.coords.longitude;
-                    statusMsg.textContent = "Location found! Consulting the love hedgehogs...";
+                    statusMsg.textContent = "Location found! Identifying city...";
 
-                    // Redirect to recommend endpoint with lat/long
-                    window.location.href = `/recommend?lat=${latitude}&long=${longitude}`;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await response.json();
+                        const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+
+                        statusMsg.textContent = "Consulting the love hedgehogs... 🦔";
+                        window.location.href = `/recommend?lat=${latitude}&long=${longitude}&city=${encodeURIComponent(city)}`;
+                    } catch (e) {
+                        statusMsg.textContent = "Consulting the love hedgehogs... 🦔";
+                        window.location.href = `/recommend?lat=${latitude}&long=${longitude}`;
+                    }
                 }
 
                 function error() {
@@ -46,10 +55,14 @@
     </div>
 
     <div class="interests-section">
-        <h3>Your Shared Interests</h3>
-        <div class="interests-content">
-            {{ interests | safe }}
-        </div>
+        <details class="interests-dropdown">
+            <summary>
+                <h3>Your Shared Interests</h3><span class="dropdown-icon">▼</span>
+            </summary>
+            <div class="interests-content">
+                {{ interests | safe }}
+            </div>
+        </details>
     </div>
 </main>
 
